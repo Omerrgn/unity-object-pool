@@ -1,11 +1,14 @@
 using UnityEngine;
 
-// Sample: a pooled object that cleans up after itself, so its next user gets it in a known state
+// Sample: a pooled object that sends itself back to the pool and cleans up after itself
 
 [RequireComponent(typeof(Rigidbody))]
 public class PooledCube : MonoBehaviour, IPoolable
 {
+    [SerializeField] private float lifetime = 2f;
+
     private Rigidbody _body;
+    private PooledObject _pooledObject;
 
     private void Awake()
     {
@@ -14,7 +17,14 @@ public class PooledCube : MonoBehaviour, IPoolable
 
     public void OnTakenFromPool()
     {
-        // Nothing to prepare: the launcher gives the cube its speed
+        // The pool puts a PooledObject on every instance, but only after Awake has run
+        if (_pooledObject == null)
+        {
+            _pooledObject = GetComponent<PooledObject>();
+        }
+
+        // The cube sends itself back, so whoever took it does not have to keep track of it
+        _pooledObject.Release(lifetime);
     }
 
     public void OnReturnedToPool()

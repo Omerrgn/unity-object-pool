@@ -3,14 +3,14 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-// Sample: fires pooled cubes while Space is held and shows the pool's counters
+// Sample: fires pooled cubes while Space is held and shows the pool's counters.
+// The cubes go back to the pool on their own, see PooledCube
 
 public class CubeLauncher : MonoBehaviour
 {
     [SerializeField] private ObjectPool pool;
     [SerializeField] private float shotsPerSecond = 10f;
     [SerializeField] private float launchSpeed = 12f;
-    [SerializeField] private float lifetime = 2f;
     [SerializeField] private float spread = 0.2f;
 
     private float _nextShotTime;
@@ -36,8 +36,6 @@ public class CubeLauncher : MonoBehaviour
         body.velocity = direction * launchSpeed;
 #endif
         body.angularVelocity = Random.insideUnitSphere * 5f;
-
-        pool.Release(cube, lifetime);
     }
 
     private static bool IsFireHeld()

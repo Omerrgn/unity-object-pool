@@ -104,7 +104,23 @@ public class ObjectPool : MonoBehaviour
             _poolables[newInstance] = poolables;
         }
 
+        // Added here rather than on the prefab, so that using a prefab with the pool needs no setup
+        if (!newInstance.TryGetComponent(out PooledObject pooledObject))
+        {
+            pooledObject = newInstance.AddComponent<PooledObject>();
+        }
+        pooledObject.Pool = this;
+
         return newInstance;
+    }
+
+    // Called by PooledObject when an instance is destroyed instead of released. An instance
+    // that was waiting in the pool stays on the stack and is skipped by TakeInstance
+    internal void Forget(GameObject instance)
+    {
+        CancelPendingRelease(instance);
+        _active.Remove(instance);
+        _poolables.Remove(instance);
     }
 
     /// <summary>
