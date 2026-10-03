@@ -13,6 +13,8 @@ using UnityEngine.Serialization;
 /// time, and never shrinks. <c>Max Size</c> limits how many instances are kept: instances
 /// released while the pool is full are destroyed.
 /// </remarks>
+// Runs before other scripts, so that they can already call Get in their own Awake
+[DefaultExecutionOrder(-100)]
 public class ObjectPool : MonoBehaviour
 {
     [Tooltip("The prefab this pool creates instances of.")]
@@ -59,6 +61,12 @@ public class ObjectPool : MonoBehaviour
 
     private void Awake()
     {
+        if (prefab == null)
+        {
+            Debug.LogError($"Pool '{name}' has no prefab assigned, so it cannot create instances.", this);
+            return;
+        }
+
         // The container stays at the scene root instead of under this object. Instances
         // are its children, so they would otherwise move and scale with the pool
         _poolContainer = new GameObject($"Pool - {prefab.name}");
