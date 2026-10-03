@@ -48,9 +48,20 @@ public class ObjectPool : MonoBehaviour
 
     private void Awake()
     {
+        // The container stays at the scene root instead of under this object. Instances
+        // are its children, so they would otherwise move and scale with the pool
         _poolContainer = new GameObject($"Pool - {prefab.name}");
 
         CreatePooler();
+    }
+
+    private void OnDestroy()
+    {
+        // Nothing else removes the container and the instances along with the pool
+        if (_poolContainer != null)
+        {
+            Destroy(_poolContainer);
+        }
     }
 
     private void CreatePooler()
