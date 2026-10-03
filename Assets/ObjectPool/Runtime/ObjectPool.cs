@@ -13,10 +13,12 @@ public class ObjectPool : MonoBehaviour
 
     private List<GameObject> _pool;
     private GameObject _poolContainer;
+    private Dictionary<GameObject, Coroutine> _pendingReleases;
 
     private void Awake()
     {
         _pool = new List<GameObject>();
+        _pendingReleases = new Dictionary<GameObject, Coroutine>();
         _poolContainer = new GameObject($"Pool - {prefab.name}");
 
         CreatePooler();
@@ -74,6 +76,8 @@ public class ObjectPool : MonoBehaviour
     // Puts an instance back so that Get can hand it out again
     public void Release(GameObject instance)
     {
+        CancelPendingRelease(instance);
+
         instance.SetActive(false);
 
         // The caller may have moved the instance under another object while using it
@@ -83,9 +87,35 @@ public class ObjectPool : MonoBehaviour
         }
     }
 
-    public static IEnumerator ReturnToPoolWithDelay(GameObject instance , float delay)
+    // Puts an instance back after a delay. The pool runs the timer itself, so the instance
+    // still comes back if the object that asked for it is disabled in the meantime
+    public void Release(GameObject instance, float delay)
+    {
+        CancelPendingRelease(instance);
+        _pendingReleases[instance] = StartCoroutine(ReleaseAfterDelay(instance, delay));
+    }
+
+    private IEnumerator ReleaseAfterDelay(GameObject instance, float delay)
     {
         yield return new WaitForSeconds(delay);
-        instance.SetActive(false);
+
+        _pendingReleases.Remove(instance);
+
+        // The instance may have been destroyed while the timer was running
+        if (instance != null)
+        {
+            Release(instance);
+        }
+    }
+
+    // Without this, a timer started for an earlier use would release the instance
+    // in the middle of its next use
+    private void CancelPendingRelease(GameObject instance)
+    {
+        if (_pendingReleases.TryGetValue(instance, out Coroutine pending))
+        {
+            StopCoroutine(pending);
+            _pendingReleases.Remove(instance);
+        }
     }
 }

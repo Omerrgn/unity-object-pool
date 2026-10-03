@@ -38,7 +38,7 @@ public class CubeLauncher : MonoBehaviour
 #endif
         body.angularVelocity = Random.insideUnitSphere * 5f;
 
-        StartCoroutine(ObjectPool.ReturnToPoolWithDelay(cube, lifetime));
+        pool.Release(cube, lifetime);
 
         _poolContainer = cube.transform.parent;
     }
