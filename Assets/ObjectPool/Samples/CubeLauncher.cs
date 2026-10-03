@@ -16,6 +16,7 @@ namespace Omerrgn.ObjectPooling.Samples
         [SerializeField] private float spread = 0.2f;
 
         private float _nextShotTime;
+        private int _cubesFired;
 
         private void Update()
         {
@@ -29,6 +30,7 @@ namespace Omerrgn.ObjectPooling.Samples
         private void Launch()
         {
             GameObject cube = pool.Get(transform.position, Random.rotation);
+            _cubesFired++;
 
             Vector3 direction = (transform.forward + transform.up + Random.insideUnitSphere * spread).normalized;
             Rigidbody body = cube.GetComponent<Rigidbody>();
@@ -55,6 +57,10 @@ namespace Omerrgn.ObjectPooling.Samples
             GUI.Label(new Rect(10, 10, 800, 30), "Hold Space to fire");
             GUI.Label(new Rect(10, 40, 800, 30),
                 $"In use: {pool.CountActive}    Waiting in the pool: {pool.CountInactive}    Total: {pool.CountAll}");
+
+            // Without a pool every cube fired would have been one Instantiate and one Destroy.
+            // Compare this number with Total above
+            GUI.Label(new Rect(10, 70, 800, 30), $"Cubes fired: {_cubesFired}");
         }
     }
 }
