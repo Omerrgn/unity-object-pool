@@ -3,13 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-// Keeps instances of one prefab around so they can be reused instead of destroyed
-
+/// <summary>
+/// Keeps instances of one prefab around so they can be reused instead of destroyed.
+/// </summary>
+/// <remarks>
+/// The pool creates <c>Initial Size</c> instances when it starts. When all of them are in use
+/// and another one is requested, the pool creates it on the spot and keeps it. The pool
+/// therefore grows to the largest number of instances that were ever in use at the same
+/// time, and never shrinks.
+/// </remarks>
 public class ObjectPool : MonoBehaviour
 {
+    [Tooltip("The prefab this pool creates instances of.")]
     [FormerlySerializedAs("prefebs")]
     [SerializeField] private GameObject prefab;
-    [SerializeField] private int poolSize = 10;
+
+    [Tooltip("How many instances are created when the pool starts.\n\n" +
+             "Too high: the extra instances are never used and only cost memory.\n" +
+             "Too low: the pool creates the missing instances during play and keeps them, " +
+             "so it grows to what is really needed and never shrinks.\n\n" +
+             "To find a good value, play the game and read CountAll afterwards.")]
+    [FormerlySerializedAs("poolSize")]
+    [Min(0)]
+    [SerializeField] private int initialSize = 10;
 
     // Instances waiting to be handed out, and instances currently handed out
     private readonly Stack<GameObject> _inactive = new Stack<GameObject>();
@@ -18,8 +34,16 @@ public class ObjectPool : MonoBehaviour
     private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
     private GameObject _poolContainer;
 
+    /// <summary>Number of instances that are handed out right now.</summary>
     public int CountActive => _active.Count;
+
+    /// <summary>Number of instances waiting in the pool.</summary>
     public int CountInactive => _inactive.Count;
+
+    /// <summary>
+    /// Number of instances the pool has created. After a play session this is the
+    /// largest number that was in use at once, or Initial Size if that is higher.
+    /// </summary>
     public int CountAll => _active.Count + _inactive.Count;
 
     private void Awake()
@@ -31,7 +55,7 @@ public class ObjectPool : MonoBehaviour
 
     private void CreatePooler()
     {
-        for (int i = 0; i < poolSize; i++)
+        for (int i = 0; i < initialSize; i++)
         {
             _inactive.Push(CreateInstance());
         }
@@ -45,7 +69,10 @@ public class ObjectPool : MonoBehaviour
         return newInstance;
     }
 
-    // Returns an active instance, left at the position it had before
+    /// <summary>
+    /// Returns an active instance, left at the position it had before.
+    /// Creates a new instance if none is waiting in the pool.
+    /// </summary>
     public GameObject Get()
     {
         GameObject instance = TakeInstance();
@@ -53,7 +80,11 @@ public class ObjectPool : MonoBehaviour
         return instance;
     }
 
-    // Returns an active instance, placed before it is activated so its OnEnable sees the final position
+    /// <summary>
+    /// Returns an active instance at the given position and rotation. The instance is placed
+    /// before it is activated, so its OnEnable already sees the final position.
+    /// Creates a new instance if none is waiting in the pool.
+    /// </summary>
     public GameObject Get(Vector3 position, Quaternion rotation)
     {
         GameObject instance = TakeInstance();
@@ -72,7 +103,7 @@ public class ObjectPool : MonoBehaviour
             instance = _inactive.Pop();
         }
 
-        // The pool is exhausted: grow it
+        // Nothing is waiting: grow the pool. Release keeps this instance like any other
         if (instance == null)
         {
             instance = CreateInstance();
@@ -82,7 +113,10 @@ public class ObjectPool : MonoBehaviour
         return instance;
     }
 
-    // Puts an instance back so that Get can hand it out again
+    /// <summary>
+    /// Puts an instance back so that Get can hand it out again. Logs a warning and does
+    /// nothing if the object is not an instance of this pool that is currently in use.
+    /// </summary>
     public void Release(GameObject instance)
     {
         if (!CanRelease(instance))
@@ -104,8 +138,11 @@ public class ObjectPool : MonoBehaviour
         _inactive.Push(instance);
     }
 
-    // Puts an instance back after a delay. The pool runs the timer itself, so the instance
-    // still comes back if the object that asked for it is disabled in the meantime
+    /// <summary>
+    /// Puts an instance back after a delay in seconds. The pool runs the timer itself, so the
+    /// instance still comes back if the object that asked for it is disabled in the meantime.
+    /// Releasing the instance earlier, or scheduling it again, cancels the previous timer.
+    /// </summary>
     public void Release(GameObject instance, float delay)
     {
         if (!CanRelease(instance))
