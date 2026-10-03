@@ -1,40 +1,43 @@
 using UnityEngine;
 
-// Sample: a pooled object that sends itself back to the pool and cleans up after itself
-
-[RequireComponent(typeof(Rigidbody))]
-public class PooledCube : MonoBehaviour, IPoolable
+namespace Omerrgn.ObjectPooling.Samples
 {
-    [SerializeField] private float lifetime = 2f;
+    // Sample: a pooled object that sends itself back to the pool and cleans up after itself
 
-    private Rigidbody _body;
-    private PooledObject _pooledObject;
-
-    private void Awake()
+    [RequireComponent(typeof(Rigidbody))]
+    public class PooledCube : MonoBehaviour, IPoolable
     {
-        _body = GetComponent<Rigidbody>();
-    }
+        [SerializeField] private float lifetime = 2f;
 
-    public void OnTakenFromPool()
-    {
-        // The pool puts a PooledObject on every instance, but only after Awake has run
-        if (_pooledObject == null)
+        private Rigidbody _body;
+        private PooledObject _pooledObject;
+
+        private void Awake()
         {
-            _pooledObject = GetComponent<PooledObject>();
+            _body = GetComponent<Rigidbody>();
         }
 
-        // The cube sends itself back, so whoever took it does not have to keep track of it
-        _pooledObject.Release(lifetime);
-    }
+        public void OnTakenFromPool()
+        {
+            // The pool puts a PooledObject on every instance, but only after Awake has run
+            if (_pooledObject == null)
+            {
+                _pooledObject = GetComponent<PooledObject>();
+            }
 
-    public void OnReturnedToPool()
-    {
-        // Otherwise the cube would start its next flight with what is left of this one
+            // The cube sends itself back, so whoever took it does not have to keep track of it
+            _pooledObject.Release(lifetime);
+        }
+
+        public void OnReturnedToPool()
+        {
+            // Otherwise the cube would start its next flight with what is left of this one
 #if UNITY_6000_0_OR_NEWER
-        _body.linearVelocity = Vector3.zero;
+            _body.linearVelocity = Vector3.zero;
 #else
-        _body.velocity = Vector3.zero;
+            _body.velocity = Vector3.zero;
 #endif
-        _body.angularVelocity = Vector3.zero;
+            _body.angularVelocity = Vector3.zero;
+        }
     }
 }
