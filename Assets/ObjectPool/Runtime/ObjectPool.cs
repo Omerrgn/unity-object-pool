@@ -47,7 +47,11 @@ public class ObjectPool : MonoBehaviour
                 return _pool[i];
             }
         }
-        return CreateInstance();
+
+        // The pool is exhausted: grow it, so the new instance is reused later
+        GameObject newInstance = CreateInstance();
+        _pool.Add(newInstance);
+        return newInstance;
     }
 
     public static void ReturnToPool(GameObject instance)
