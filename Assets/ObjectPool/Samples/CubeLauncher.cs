@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-// Sample: fires pooled cubes while Space is held and shows how many objects the pool has created
+// Sample: fires pooled cubes while Space is held and shows the pool's counters
 
 public class CubeLauncher : MonoBehaviour
 {
@@ -14,7 +14,6 @@ public class CubeLauncher : MonoBehaviour
     [SerializeField] private float spread = 0.2f;
 
     private float _nextShotTime;
-    private Transform _poolContainer;
 
     private void Update()
     {
@@ -39,8 +38,6 @@ public class CubeLauncher : MonoBehaviour
         body.angularVelocity = Random.insideUnitSphere * 5f;
 
         pool.Release(cube, lifetime);
-
-        _poolContainer = cube.transform.parent;
     }
 
     private static bool IsFireHeld()
@@ -55,11 +52,8 @@ public class CubeLauncher : MonoBehaviour
     private void OnGUI()
     {
         GUI.skin.label.fontSize = 20;
-        GUI.Label(new Rect(10, 10, 600, 30), "Hold Space to fire");
-
-        if (_poolContainer != null)
-        {
-            GUI.Label(new Rect(10, 40, 600, 30), $"Objects created by the pool: {_poolContainer.childCount}");
-        }
+        GUI.Label(new Rect(10, 10, 800, 30), "Hold Space to fire");
+        GUI.Label(new Rect(10, 40, 800, 30),
+            $"In use: {pool.CountActive}    Waiting in the pool: {pool.CountInactive}    Total: {pool.CountAll}");
     }
 }

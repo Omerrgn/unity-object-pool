@@ -11,14 +11,19 @@ public class ObjectPool : MonoBehaviour
     [SerializeField] private GameObject prefab;
     [SerializeField] private int poolSize = 10;
 
-    private List<GameObject> _pool;
+    // Instances waiting to be handed out, and instances currently handed out
+    private readonly Stack<GameObject> _inactive = new Stack<GameObject>();
+    private readonly HashSet<GameObject> _active = new HashSet<GameObject>();
+
+    private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
     private GameObject _poolContainer;
-    private Dictionary<GameObject, Coroutine> _pendingReleases;
+
+    public int CountActive => _active.Count;
+    public int CountInactive => _inactive.Count;
+    public int CountAll => _active.Count + _inactive.Count;
 
     private void Awake()
     {
-        _pool = new List<GameObject>();
-        _pendingReleases = new Dictionary<GameObject, Coroutine>();
         _poolContainer = new GameObject($"Pool - {prefab.name}");
 
         CreatePooler();
@@ -28,7 +33,7 @@ public class ObjectPool : MonoBehaviour
     {
         for (int i = 0; i < poolSize; i++)
         {
-            _pool.Add(CreateInstance());
+            _inactive.Push(CreateInstance());
         }
     }
 
@@ -59,24 +64,34 @@ public class ObjectPool : MonoBehaviour
 
     private GameObject TakeInstance()
     {
-        for (int i = 0; i < _pool.Count; i++)
+        GameObject instance = null;
+
+        // Skip instances that were destroyed while they waited in the pool
+        while (instance == null && _inactive.Count > 0)
         {
-            if (!_pool[i].activeInHierarchy)
-            {
-                return _pool[i];
-            }
+            instance = _inactive.Pop();
         }
 
-        // The pool is exhausted: grow it, so the new instance is reused later
-        GameObject newInstance = CreateInstance();
-        _pool.Add(newInstance);
-        return newInstance;
+        // The pool is exhausted: grow it
+        if (instance == null)
+        {
+            instance = CreateInstance();
+        }
+
+        _active.Add(instance);
+        return instance;
     }
 
     // Puts an instance back so that Get can hand it out again
     public void Release(GameObject instance)
     {
+        if (!CanRelease(instance))
+        {
+            return;
+        }
+
         CancelPendingRelease(instance);
+        _active.Remove(instance);
 
         instance.SetActive(false);
 
@@ -85,12 +100,19 @@ public class ObjectPool : MonoBehaviour
         {
             instance.transform.SetParent(_poolContainer.transform, false);
         }
+
+        _inactive.Push(instance);
     }
 
     // Puts an instance back after a delay. The pool runs the timer itself, so the instance
     // still comes back if the object that asked for it is disabled in the meantime
     public void Release(GameObject instance, float delay)
     {
+        if (!CanRelease(instance))
+        {
+            return;
+        }
+
         CancelPendingRelease(instance);
         _pendingReleases[instance] = StartCoroutine(ReleaseAfterDelay(instance, delay));
     }
@@ -101,10 +123,14 @@ public class ObjectPool : MonoBehaviour
 
         _pendingReleases.Remove(instance);
 
-        // The instance may have been destroyed while the timer was running
         if (instance != null)
         {
             Release(instance);
+        }
+        else
+        {
+            // The instance was destroyed while it was in use: forget it
+            _active.Remove(instance);
         }
     }
 
@@ -117,5 +143,24 @@ public class ObjectPool : MonoBehaviour
             StopCoroutine(pending);
             _pendingReleases.Remove(instance);
         }
+    }
+
+    private bool CanRelease(GameObject instance)
+    {
+        if (instance == null)
+        {
+            Debug.LogWarning($"Pool '{name}': cannot release an object that is null or destroyed.", this);
+            return false;
+        }
+
+        if (_active.Contains(instance))
+        {
+            return true;
+        }
+
+        // Stack.Contains walks the whole stack, which is fine because this is the error path
+        string reason = _inactive.Contains(instance) ? "it is already in the pool" : "it does not belong to this pool";
+        Debug.LogWarning($"Pool '{name}': '{instance.name}' was not released because {reason}.", instance);
+        return false;
     }
 }
