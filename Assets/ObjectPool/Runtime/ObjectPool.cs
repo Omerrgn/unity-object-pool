@@ -10,7 +10,8 @@ using UnityEngine.Serialization;
 /// The pool creates <c>Initial Size</c> instances when it starts. When all of them are in use
 /// and another one is requested, the pool creates it on the spot and keeps it. The pool
 /// therefore grows to the largest number of instances that were ever in use at the same
-/// time, and never shrinks.
+/// time, and never shrinks. <c>Max Size</c> limits how many instances are kept: instances
+/// released while the pool is full are destroyed.
 /// </remarks>
 public class ObjectPool : MonoBehaviour
 {
@@ -26,6 +27,13 @@ public class ObjectPool : MonoBehaviour
     [FormerlySerializedAs("poolSize")]
     [Min(0)]
     [SerializeField] private int initialSize = 10;
+
+    [Tooltip("The largest number of instances the pool keeps. 0 means no limit.\n\n" +
+             "Get never fails: if every instance is in use, the pool creates another one even " +
+             "beyond this number. When such an extra instance is released and the pool is " +
+             "already full, it is destroyed instead of kept.")]
+    [Min(0)]
+    [SerializeField] private int maxSize = 0;
 
     // Instances waiting to be handed out, and instances currently handed out
     private readonly Stack<GameObject> _inactive = new Stack<GameObject>();
@@ -53,6 +61,15 @@ public class ObjectPool : MonoBehaviour
         _poolContainer = new GameObject($"Pool - {prefab.name}");
 
         CreatePooler();
+    }
+
+    private void OnValidate()
+    {
+        // A limit below the initial size would destroy pre-created instances on their first release
+        if (maxSize > 0 && maxSize < initialSize)
+        {
+            maxSize = initialSize;
+        }
     }
 
     private void OnDestroy()
@@ -137,6 +154,14 @@ public class ObjectPool : MonoBehaviour
 
         CancelPendingRelease(instance);
         _active.Remove(instance);
+
+        // The pool already holds as many instances as it may keep, so this one was
+        // created to get through a peak and is not needed any more
+        if (maxSize > 0 && _inactive.Count >= maxSize)
+        {
+            Destroy(instance);
+            return;
+        }
 
         instance.SetActive(false);
 
