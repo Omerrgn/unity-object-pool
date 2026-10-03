@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-//karakter havuzu oluþturma
+// Keeps instances of one prefab around so they can be reused instead of destroyed
 
-public class ObjectPooler : MonoBehaviour
+public class ObjectPool : MonoBehaviour
 {
-    [SerializeField] private GameObject prefebs;
+    [FormerlySerializedAs("prefebs")]
+    [SerializeField] private GameObject prefab;
     [SerializeField] private int poolSize = 10;
 
     private List<GameObject> _pool;
@@ -15,7 +17,7 @@ public class ObjectPooler : MonoBehaviour
     private void Awake()
     {
         _pool = new List<GameObject>();
-        _poolContainer = new GameObject($"Pool - {prefebs.name}");
+        _poolContainer = new GameObject($"Pool - {prefab.name}");
 
         CreatePooler();
     }
@@ -30,7 +32,7 @@ public class ObjectPooler : MonoBehaviour
 
     private GameObject CreateInstance()
     {
-        GameObject newInstance = Instantiate(prefebs);
+        GameObject newInstance = Instantiate(prefab);
         newInstance.transform.SetParent(_poolContainer.transform);
         newInstance.SetActive(false);
         return newInstance;
@@ -58,6 +60,4 @@ public class ObjectPooler : MonoBehaviour
         yield return new WaitForSeconds(delay);
         instance.SetActive(false);
     }
-
-    
 }
