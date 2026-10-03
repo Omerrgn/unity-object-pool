@@ -2,8 +2,7 @@ using UnityEngine;
 
 namespace Omerrgn.ObjectPooling.Samples
 {
-    // Sample: a pooled object that sends itself back to the pool and cleans up after itself
-
+    // Sample: a pooled object that sends itself back to the pool and resets itself
     [RequireComponent(typeof(Rigidbody))]
     public class PooledCube : MonoBehaviour, IPoolable
     {
@@ -19,19 +18,17 @@ namespace Omerrgn.ObjectPooling.Samples
 
         public void OnTakenFromPool()
         {
-            // The pool puts a PooledObject on every instance, but only after Awake has run
+            // The pool adds PooledObject only after Awake has run
             if (_pooledObject == null)
             {
                 _pooledObject = GetComponent<PooledObject>();
             }
 
-            // The cube sends itself back, so whoever took it does not have to keep track of it
             _pooledObject.Release(lifetime);
         }
 
         public void OnReturnedToPool()
         {
-            // Otherwise the cube would start its next flight with what is left of this one
 #if UNITY_6000_0_OR_NEWER
             _body.linearVelocity = Vector3.zero;
 #else

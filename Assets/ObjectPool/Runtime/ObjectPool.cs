@@ -4,17 +4,8 @@ using UnityEngine;
 
 namespace Omerrgn.ObjectPooling
 {
-    /// <summary>
-    /// Keeps instances of one prefab around so they can be reused instead of destroyed.
-    /// </summary>
-    /// <remarks>
-    /// The pool creates <c>Initial Size</c> instances when it starts. When all of them are in use
-    /// and another one is requested, the pool creates it on the spot and keeps it. The pool
-    /// therefore grows to the largest number of instances that were ever in use at the same
-    /// time, and never shrinks. <c>Max Size</c> limits how many instances are kept: instances
-    /// released while the pool is full are destroyed.
-    /// </remarks>
-    // Runs before other scripts, so that they can already call Get in their own Awake
+    /// <summary>Keeps instances of one prefab around so they can be reused instead of destroyed.</summary>
+    // Runs early, so that other scripts can already call Get in their own Awake
     [DefaultExecutionOrder(-100)]
     public class ObjectPool : MonoBehaviour
     {
@@ -36,26 +27,14 @@ namespace Omerrgn.ObjectPooling
         [Min(0)]
         [SerializeField] private int maxSize = 0;
 
-        // Instances waiting to be handed out, and instances currently handed out
         private readonly Stack<GameObject> _inactive = new Stack<GameObject>();
         private readonly HashSet<GameObject> _active = new HashSet<GameObject>();
-
         private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
-
-        // The IPoolable components of each instance, looked up once when the instance is created
         private readonly Dictionary<GameObject, IPoolable[]> _poolables = new Dictionary<GameObject, IPoolable[]>();
         private GameObject _poolContainer;
 
-        /// <summary>Number of instances that are handed out right now.</summary>
         public int CountActive => _active.Count;
-
-        /// <summary>Number of instances waiting in the pool.</summary>
         public int CountInactive => _inactive.Count;
-
-        /// <summary>
-        /// Number of instances the pool has created. After a play session this is the
-        /// largest number that was in use at once, or Initial Size if that is higher.
-        /// </summary>
         public int CountAll => _active.Count + _inactive.Count;
 
         private void Awake()
@@ -66,8 +45,7 @@ namespace Omerrgn.ObjectPooling
                 return;
             }
 
-            // The container stays at the scene root instead of under this object. Instances
-            // are its children, so they would otherwise move and scale with the pool
+            // Kept at the scene root: as a child of the pool, the instances would move with it
             _poolContainer = new GameObject($"Pool - {prefab.name}");
 
             CreatePooler();
@@ -75,7 +53,6 @@ namespace Omerrgn.ObjectPooling
 
         private void OnValidate()
         {
-            // A limit below the initial size would destroy pre-created instances on their first release
             if (maxSize > 0 && maxSize < initialSize)
             {
                 maxSize = initialSize;
@@ -84,7 +61,6 @@ namespace Omerrgn.ObjectPooling
 
         private void OnDestroy()
         {
-            // Nothing else removes the container and the instances along with the pool
             if (_poolContainer != null)
             {
                 Destroy(_poolContainer);
@@ -111,7 +87,6 @@ namespace Omerrgn.ObjectPooling
                 _poolables[newInstance] = poolables;
             }
 
-            // Added here rather than on the prefab, so that using a prefab with the pool needs no setup
             if (!newInstance.TryGetComponent(out PooledObject pooledObject))
             {
                 pooledObject = newInstance.AddComponent<PooledObject>();
@@ -121,8 +96,7 @@ namespace Omerrgn.ObjectPooling
             return newInstance;
         }
 
-        // Called by PooledObject when an instance is destroyed instead of released. An instance
-        // that was waiting in the pool stays on the stack and is skipped by TakeInstance
+        // Called by PooledObject when an instance is destroyed instead of released
         internal void Forget(GameObject instance)
         {
             CancelPendingRelease(instance);
@@ -130,10 +104,7 @@ namespace Omerrgn.ObjectPooling
             _poolables.Remove(instance);
         }
 
-        /// <summary>
-        /// Returns an active instance, left at the position it had before.
-        /// Creates a new instance if none is waiting in the pool.
-        /// </summary>
+        /// <summary>Returns an active instance, left at the position it had before.</summary>
         public GameObject Get()
         {
             GameObject instance = TakeInstance();
@@ -141,11 +112,7 @@ namespace Omerrgn.ObjectPooling
             return instance;
         }
 
-        /// <summary>
-        /// Returns an active instance at the given position and rotation. The instance is placed
-        /// before it is activated, so its OnEnable already sees the final position.
-        /// Creates a new instance if none is waiting in the pool.
-        /// </summary>
+        /// <summary>Returns an active instance, placed before it is activated.</summary>
         public GameObject Get(Vector3 position, Quaternion rotation)
         {
             GameObject instance = TakeInstance();
@@ -158,13 +125,12 @@ namespace Omerrgn.ObjectPooling
         {
             GameObject instance = null;
 
-            // Skip instances that were destroyed while they waited in the pool
+            // Instances destroyed while they waited in the pool are skipped
             while (instance == null && _inactive.Count > 0)
             {
                 instance = _inactive.Pop();
             }
 
-            // Nothing is waiting: grow the pool. Release keeps this instance like any other
             if (instance == null)
             {
                 instance = CreateInstance();
@@ -187,10 +153,7 @@ namespace Omerrgn.ObjectPooling
             }
         }
 
-        /// <summary>
-        /// Puts an instance back so that Get can hand it out again. Logs a warning and does
-        /// nothing if the object is not an instance of this pool that is currently in use.
-        /// </summary>
+        /// <summary>Puts an instance back so that Get can hand it out again.</summary>
         public void Release(GameObject instance)
         {
             if (!CanRelease(instance))
@@ -201,7 +164,6 @@ namespace Omerrgn.ObjectPooling
             CancelPendingRelease(instance);
             _active.Remove(instance);
 
-            // Told while the instance is still active, so it can stop effects or coroutines
             if (_poolables.TryGetValue(instance, out IPoolable[] poolables))
             {
                 for (int i = 0; i < poolables.Length; i++)
@@ -210,8 +172,7 @@ namespace Omerrgn.ObjectPooling
                 }
             }
 
-            // The pool already holds as many instances as it may keep, so this one was
-            // created to get through a peak and is not needed any more
+            // The pool is full, so this extra instance is not kept
             if (maxSize > 0 && _inactive.Count >= maxSize)
             {
                 _poolables.Remove(instance);
@@ -221,7 +182,6 @@ namespace Omerrgn.ObjectPooling
 
             instance.SetActive(false);
 
-            // The caller may have moved the instance under another object while using it
             if (instance.transform.parent != _poolContainer.transform)
             {
                 instance.transform.SetParent(_poolContainer.transform, false);
@@ -230,11 +190,7 @@ namespace Omerrgn.ObjectPooling
             _inactive.Push(instance);
         }
 
-        /// <summary>
-        /// Puts an instance back after a delay in seconds. The pool runs the timer itself, so the
-        /// instance still comes back if the object that asked for it is disabled in the meantime.
-        /// Releasing the instance earlier, or scheduling it again, cancels the previous timer.
-        /// </summary>
+        /// <summary>Puts an instance back after a delay in seconds.</summary>
         public void Release(GameObject instance, float delay)
         {
             if (!CanRelease(instance))
@@ -258,13 +214,11 @@ namespace Omerrgn.ObjectPooling
             }
             else
             {
-                // The instance was destroyed while it was in use: forget it
                 _active.Remove(instance);
             }
         }
 
-        // Without this, a timer started for an earlier use would release the instance
-        // in the middle of its next use
+        // A timer left over from an earlier use must not release the instance during its next use
         private void CancelPendingRelease(GameObject instance)
         {
             if (_pendingReleases.TryGetValue(instance, out Coroutine pending))
@@ -287,7 +241,6 @@ namespace Omerrgn.ObjectPooling
                 return true;
             }
 
-            // Stack.Contains walks the whole stack, which is fine because this is the error path
             string reason = _inactive.Contains(instance) ? "it is already in the pool" : "it does not belong to this pool";
             Debug.LogWarning($"Pool '{name}': '{instance.name}' was not released because {reason}.", instance);
             return false;

@@ -2,21 +2,12 @@ using UnityEngine;
 
 namespace Omerrgn.ObjectPooling
 {
-    /// <summary>
-    /// Remembers which pool an instance came from, so the instance can send itself back
-    /// without anyone having to hand it a reference to the pool.
-    /// </summary>
-    /// <remarks>
-    /// The pool adds this component to every instance it creates. There is no need to put it
-    /// on the prefab.
-    /// </remarks>
+    /// <summary>Added by the pool to every instance, so the instance can release itself.</summary>
     [DisallowMultipleComponent]
     public class PooledObject : MonoBehaviour
     {
-        /// <summary>The pool this instance belongs to.</summary>
         public ObjectPool Pool { get; internal set; }
 
-        /// <summary>Puts this instance back into its pool.</summary>
         public void Release()
         {
             if (HasPool())
@@ -25,7 +16,6 @@ namespace Omerrgn.ObjectPooling
             }
         }
 
-        /// <summary>Puts this instance back into its pool after a delay in seconds.</summary>
         public void Release(float delay)
         {
             if (HasPool())
@@ -47,7 +37,6 @@ namespace Omerrgn.ObjectPooling
 
         private void OnDestroy()
         {
-            // The instance was destroyed instead of released: let the pool stop counting it
             if (Pool != null)
             {
                 Pool.Forget(gameObject);
