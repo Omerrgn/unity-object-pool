@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 /// <summary>
 /// Keeps instances of one prefab around so they can be reused instead of destroyed.
@@ -18,7 +17,6 @@ using UnityEngine.Serialization;
 public class ObjectPool : MonoBehaviour
 {
     [Tooltip("The prefab this pool creates instances of.")]
-    [FormerlySerializedAs("prefebs")]
     [SerializeField] private GameObject prefab;
 
     [Tooltip("How many instances are created when the pool starts.\n\n" +
@@ -26,7 +24,6 @@ public class ObjectPool : MonoBehaviour
              "Too low: the pool creates the missing instances during play and keeps them, " +
              "so it grows to what is really needed and never shrinks.\n\n" +
              "To find a good value, play the game and read CountAll afterwards.")]
-    [FormerlySerializedAs("poolSize")]
     [Min(0)]
     [SerializeField] private int initialSize = 10;
 
