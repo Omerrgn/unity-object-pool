@@ -38,7 +38,24 @@ public class ObjectPool : MonoBehaviour
         return newInstance;
     }
 
-    public GameObject GetInstanceFromPool()
+    // Returns an active instance, left at the position it had before
+    public GameObject Get()
+    {
+        GameObject instance = TakeInstance();
+        instance.SetActive(true);
+        return instance;
+    }
+
+    // Returns an active instance, placed before it is activated so its OnEnable sees the final position
+    public GameObject Get(Vector3 position, Quaternion rotation)
+    {
+        GameObject instance = TakeInstance();
+        instance.transform.SetPositionAndRotation(position, rotation);
+        instance.SetActive(true);
+        return instance;
+    }
+
+    private GameObject TakeInstance()
     {
         for (int i = 0; i < _pool.Count; i++)
         {

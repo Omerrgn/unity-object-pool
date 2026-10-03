@@ -27,9 +27,7 @@ public class CubeLauncher : MonoBehaviour
 
     private void Launch()
     {
-        GameObject cube = pool.GetInstanceFromPool();
-        cube.transform.SetPositionAndRotation(transform.position, Random.rotation);
-        cube.SetActive(true);
+        GameObject cube = pool.Get(transform.position, Random.rotation);
 
         Vector3 direction = (transform.forward + transform.up + Random.insideUnitSphere * spread).normalized;
         Rigidbody body = cube.GetComponent<Rigidbody>();
