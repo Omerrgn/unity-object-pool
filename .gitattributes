@@ -1,0 +1,5 @@
+# Keep text files with LF line endings both in the repository and on disk
+* text=auto eol=lf
+
+# Show the name of the changed method in C# diffs
+*.cs diff=csharp
