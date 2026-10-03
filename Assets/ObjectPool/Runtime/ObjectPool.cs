@@ -71,9 +71,16 @@ public class ObjectPool : MonoBehaviour
         return newInstance;
     }
 
-    public static void ReturnToPool(GameObject instance)
+    // Puts an instance back so that Get can hand it out again
+    public void Release(GameObject instance)
     {
         instance.SetActive(false);
+
+        // The caller may have moved the instance under another object while using it
+        if (instance.transform.parent != _poolContainer.transform)
+        {
+            instance.transform.SetParent(_poolContainer.transform, false);
+        }
     }
 
     public static IEnumerator ReturnToPoolWithDelay(GameObject instance , float delay)
