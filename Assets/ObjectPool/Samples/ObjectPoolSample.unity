@@ -466,7 +466,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prefab: {fileID: 100100, guid: ab0963f9563341cfaa8c09181f8b6592, type: 3}
-  poolSize: 30
+  initialSize: 10
+  maxSize: 0
 --- !u!114 &1200000004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -482,7 +483,6 @@ MonoBehaviour:
   pool: {fileID: 1200000003}
   shotsPerSecond: 10
   launchSpeed: 12
-  lifetime: 2
   spread: 0.2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
