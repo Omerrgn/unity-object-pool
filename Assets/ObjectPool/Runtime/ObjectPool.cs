@@ -40,6 +40,9 @@ public class ObjectPool : MonoBehaviour
     private readonly HashSet<GameObject> _active = new HashSet<GameObject>();
 
     private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
+
+    // The IPoolable components of each instance, looked up once when the instance is created
+    private readonly Dictionary<GameObject, IPoolable[]> _poolables = new Dictionary<GameObject, IPoolable[]>();
     private GameObject _poolContainer;
 
     /// <summary>Number of instances that are handed out right now.</summary>
@@ -94,6 +97,13 @@ public class ObjectPool : MonoBehaviour
         GameObject newInstance = Instantiate(prefab);
         newInstance.transform.SetParent(_poolContainer.transform);
         newInstance.SetActive(false);
+
+        IPoolable[] poolables = newInstance.GetComponentsInChildren<IPoolable>(true);
+        if (poolables.Length > 0)
+        {
+            _poolables[newInstance] = poolables;
+        }
+
         return newInstance;
     }
 
@@ -104,7 +114,7 @@ public class ObjectPool : MonoBehaviour
     public GameObject Get()
     {
         GameObject instance = TakeInstance();
-        instance.SetActive(true);
+        Activate(instance);
         return instance;
     }
 
@@ -117,7 +127,7 @@ public class ObjectPool : MonoBehaviour
     {
         GameObject instance = TakeInstance();
         instance.transform.SetPositionAndRotation(position, rotation);
-        instance.SetActive(true);
+        Activate(instance);
         return instance;
     }
 
@@ -141,6 +151,19 @@ public class ObjectPool : MonoBehaviour
         return instance;
     }
 
+    private void Activate(GameObject instance)
+    {
+        instance.SetActive(true);
+
+        if (_poolables.TryGetValue(instance, out IPoolable[] poolables))
+        {
+            for (int i = 0; i < poolables.Length; i++)
+            {
+                poolables[i].OnTakenFromPool();
+            }
+        }
+    }
+
     /// <summary>
     /// Puts an instance back so that Get can hand it out again. Logs a warning and does
     /// nothing if the object is not an instance of this pool that is currently in use.
@@ -155,10 +178,20 @@ public class ObjectPool : MonoBehaviour
         CancelPendingRelease(instance);
         _active.Remove(instance);
 
+        // Told while the instance is still active, so it can stop effects or coroutines
+        if (_poolables.TryGetValue(instance, out IPoolable[] poolables))
+        {
+            for (int i = 0; i < poolables.Length; i++)
+            {
+                poolables[i].OnReturnedToPool();
+            }
+        }
+
         // The pool already holds as many instances as it may keep, so this one was
         // created to get through a peak and is not needed any more
         if (maxSize > 0 && _inactive.Count >= maxSize)
         {
+            _poolables.Remove(instance);
             Destroy(instance);
             return;
         }
