@@ -144,7 +144,7 @@ This repository does not try to replace it. It is an alternative for GameObjects
 
 The package comes with a sample scene. In the Package Manager, select **Object Pool**, open its **Samples** tab and click **Import** next to **Cube Launcher**. Unity copies the sample into `Assets/Samples/Object Pool/<version>/Cube Launcher`.
 
-Open `ObjectPoolSample.unity` from there, press Play and hold Space. A launcher fires cubes that return to the pool on their own after two seconds.
+Open `ObjectPoolSample.unity` from there, press Play and hold Space. A launcher fires cubes that return to the pool on their own after two seconds. The cubes and the ground use the default material of whichever render pipeline your project has, Built-in, URP or HDRP.
 
 The text in the corner shows the pool's counters and the number of cubes fired so far. Total settles at about 20 however long you keep firing, while the number of cubes fired keeps growing. Without a pool, each of those cubes would have been one `Instantiate` and one `Destroy`.
 
