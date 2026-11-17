@@ -92,7 +92,7 @@ public class Enemy : MonoBehaviour, IPoolable
 
 `OnTakenFromPool` is called right after the instance was activated, `OnReturnedToPool` right before it is deactivated. Components on child objects are called too.
 
-`OnEnable` and `OnDisable` are not a good replacement, because they also run when the pool first creates an instance and whenever a parent object is switched on or off.
+`OnEnable` and `OnDisable` are not a good replacement. The pool creates each instance active and switches it off right away, so that `Awake` and its setup work happen while the pool is being filled rather than in the middle of play. As a side effect, `OnEnable` and `OnDisable` also run once when an instance is created, and again whenever a parent object is switched on or off.
 
 ## Releasing from the object itself with PooledObject
 
