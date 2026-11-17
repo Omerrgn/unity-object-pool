@@ -6,7 +6,7 @@
 
 A small GameObject pool for Unity that you set up in the Inspector: one `ObjectPool` component per prefab.
 
-![The sample scene: cubes are fired ten times a second and go back to the pool after two seconds. After 44 shots the pool holds 22 cubes.](docs/images/sample.gif)
+![The sample scene: cubes are fired ten times a second and go back to the pool after two seconds. After 44 shots the pool holds 21 cubes.](docs/images/sample.gif)
 
 Instead of calling `Instantiate` and `Destroy` for every bullet, enemy or effect, you take an object from the pool and put it back when you are done with it. The pool deactivates the object and hands the same one out again next time.
 
