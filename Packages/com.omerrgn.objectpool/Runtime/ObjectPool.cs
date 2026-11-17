@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Omerrgn.ObjectPooling
 {
@@ -47,8 +48,33 @@ namespace Omerrgn.ObjectPooling
 
             // Kept at the scene root: as a child of the pool, the instances would move with it
             _poolContainer = new GameObject($"Pool - {prefab.name}");
+            KeepContainerInPoolScene();
 
             CreatePooler();
+        }
+
+        private void Start()
+        {
+            // The pool may have been marked DontDestroyOnLoad after its own Awake
+            KeepContainerInPoolScene();
+        }
+
+        // New objects go into the active scene, which is not always the scene the pool is in
+        private void KeepContainerInPoolScene()
+        {
+            if (_poolContainer == null || _poolContainer.scene == gameObject.scene)
+            {
+                return;
+            }
+
+            if (gameObject.scene.name == "DontDestroyOnLoad")
+            {
+                DontDestroyOnLoad(_poolContainer);
+            }
+            else
+            {
+                SceneManager.MoveGameObjectToScene(_poolContainer, gameObject.scene);
+            }
         }
 
         private void OnValidate()

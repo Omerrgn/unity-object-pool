@@ -7,6 +7,7 @@
 - The scripts compile into their own assembly, `Omerrgn.ObjectPooling`.
 - Requires Unity 6 (6000.0) or newer.
 - Play mode tests cover reuse, growing, Max Size, rejected releases, delayed releases, `IPoolable` and `PooledObject`.
+- The instances now stay in the pool's scene. A pool marked `DontDestroyOnLoad` used to lose them on the next scene load, and a pool in an additively loaded scene put them into the active scene.
 
 ## 1.0.0
 

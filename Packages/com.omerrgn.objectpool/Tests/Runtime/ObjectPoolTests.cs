@@ -2,6 +2,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace Omerrgn.ObjectPooling.Tests
@@ -202,6 +203,35 @@ namespace Omerrgn.ObjectPooling.Tests
             yield return null;
 
             Assert.AreEqual(0, pool.CountActive);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolMarkedDontDestroyOnLoad_KeepsInstancesInItsScene()
+        {
+            ObjectPool pool = CreatePool(1);
+            Object.DontDestroyOnLoad(pool.gameObject);
+            yield return null;
+
+            GameObject instance = pool.Get();
+
+            Assert.AreEqual(pool.gameObject.scene, instance.scene);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolInAnotherScene_KeepsInstancesInThatScene()
+        {
+            Scene otherScene = SceneManager.CreateScene("Pool Test Scene");
+            var poolObject = new GameObject("Pool");
+            poolObject.SetActive(false);
+            SceneManager.MoveGameObjectToScene(poolObject, otherScene);
+
+            _pool = poolObject.AddComponent<ObjectPool>();
+            _pool.Configure(_template, 1, 0);
+            poolObject.SetActive(true);
+            GameObject instance = _pool.Get();
+
+            Assert.AreEqual(otherScene, instance.scene);
+            yield return SceneManager.UnloadSceneAsync(otherScene);
         }
     }
 }
