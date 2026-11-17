@@ -1,8 +1,18 @@
 # Unity Object Pool
 
+[![Unity 6000.0+](https://img.shields.io/badge/Unity-6000.0%2B-000000?logo=unity&logoColor=white)](#tested-with)
+[![Latest release](https://img.shields.io/github/v/release/Omerrgn/unity-object-pool?label=release)](https://github.com/Omerrgn/unity-object-pool/releases)
+[![MIT license](https://img.shields.io/github/license/Omerrgn/unity-object-pool)](LICENSE)
+
 A small GameObject pool for Unity that you set up in the Inspector: one `ObjectPool` component per prefab.
 
 Instead of calling `Instantiate` and `Destroy` for every bullet, enemy or effect, you take an object from the pool and put it back when you are done with it. The pool deactivates the object and hands the same one out again next time.
+
+- **Set up in the Inspector.** Add an Object Pool to any GameObject and give it a prefab; no pool code to write.
+- **Grows when it runs out** and keeps what it created. **Max Size** limits how many instances it holds on to.
+- **`IPoolable`** resets an instance between uses, **`PooledObject`** lets an instance send itself back.
+- **Delayed release** that is cancelled when the instance comes back early.
+- **Installs from the Package Manager**, comes with a sample scene and play mode tests.
 
 [Türkçe özet aşağıda.](#türkçe)
 
@@ -47,6 +57,20 @@ public class Gun : MonoBehaviour
 ```
 
 `Get` returns the object active and already in place. `Release` deactivates it and makes it available again.
+
+## How it works
+
+```mermaid
+flowchart LR
+    start(["Pool starts"]) -- "creates Initial Size instances" --> waiting["Waiting in the pool<br>inactive"]
+    waiting -- "Get" --> inuse["In use<br>active"]
+    empty{{"Get while nothing is waiting"}} -- "creates a new instance" --> inuse
+    inuse -- "Release" --> full{"Max Size instances<br>already waiting?"}
+    full -- "no" --> waiting
+    full -- "yes" --> destroyed(["Destroyed"])
+```
+
+Every instance moves between two states. While it waits in the pool it is inactive; `Get` activates it and hands it out, `Release` deactivates it and puts it back. After the start, the pool creates an instance only when nothing is waiting, and destroys one only when it already holds as many waiting instances as Max Size allows.
 
 ## How the size works
 
