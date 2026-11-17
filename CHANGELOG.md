@@ -8,6 +8,7 @@
 - Requires Unity 6 (6000.0) or newer.
 - Play mode tests cover reuse, growing, Max Size, rejected releases, delayed releases, `IPoolable` and `PooledObject`.
 - The instances now stay in the pool's scene. A pool marked `DontDestroyOnLoad` used to lose them on the next scene load, and a pool in an additively loaded scene put them into the active scene.
+- An exception thrown by an `IPoolable` method is logged and no longer leaves the instance stuck between the pool and the game.
 
 ## 1.0.0
 

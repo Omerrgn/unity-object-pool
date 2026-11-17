@@ -182,6 +182,26 @@ namespace Omerrgn.ObjectPooling.Tests
         }
 
         [Test]
+        public void IPoolable_ThatThrows_DoesNotStopGetOrRelease()
+        {
+            _template.AddComponent<ThrowingPoolable>();
+            _template.AddComponent<CallCounter>();
+            ObjectPool pool = CreatePool(1);
+
+            LogAssert.Expect(LogType.Exception, new Regex("Thrown from OnTakenFromPool"));
+            GameObject instance = pool.Get();
+
+            Assert.AreEqual(1, instance.GetComponents<CallCounter>()[1].TakenCount,
+                "A component after the one that threw was not called");
+
+            LogAssert.Expect(LogType.Exception, new Regex("Thrown from OnReturnedToPool"));
+            pool.Release(instance);
+
+            Assert.IsFalse(instance.activeSelf);
+            Assert.AreEqual(1, pool.CountInactive);
+        }
+
+        [Test]
         public void PooledObject_ReleasesInstanceToItsPool()
         {
             ObjectPool pool = CreatePool(1);

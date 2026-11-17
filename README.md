@@ -127,6 +127,7 @@ You do not have to add `PooledObject` to the prefab. The pool adds it after the 
 
 - Call `Release`, not `Destroy`. If a pooled instance is destroyed anyway, the pool notices and stops counting it, but the object is gone and a new one has to be created later.
 - Releasing an object twice, or releasing an object that belongs to another pool, logs a warning and does nothing.
+- If an `IPoolable` method throws, the exception is logged and the instance is still handed out or put back; the other components on it are still called.
 - A delayed release is cancelled when the instance is released earlier or scheduled again. A bullet with a three second lifetime that hits something after one second will not be pulled back two seconds into its next flight.
 - The timer of a delayed release runs on the pool. If the pool's GameObject is deactivated, pending delayed releases are lost and those instances stay in use.
 - The instances live under an object named `Pool - <prefab name>` in the same scene as the pool, and are destroyed together with the pool. A pool marked `DontDestroyOnLoad` keeps its instances across scene loads; call `DontDestroyOnLoad` in `Awake` so that the pool can follow along.

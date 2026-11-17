@@ -177,12 +177,26 @@ namespace Omerrgn.ObjectPooling
         private void Activate(GameObject instance)
         {
             instance.SetActive(true);
+            CallPoolables(instance, poolable => poolable.OnTakenFromPool());
+        }
 
-            if (_poolables.TryGetValue(instance, out IPoolable[] poolables))
+        // An exception in one component must not leave the instance half taken or half returned
+        private void CallPoolables(GameObject instance, System.Action<IPoolable> call)
+        {
+            if (!_poolables.TryGetValue(instance, out IPoolable[] poolables))
             {
-                for (int i = 0; i < poolables.Length; i++)
+                return;
+            }
+
+            for (int i = 0; i < poolables.Length; i++)
+            {
+                try
                 {
-                    poolables[i].OnTakenFromPool();
+                    call(poolables[i]);
+                }
+                catch (System.Exception exception)
+                {
+                    Debug.LogException(exception, poolables[i] as Object);
                 }
             }
         }
@@ -197,14 +211,7 @@ namespace Omerrgn.ObjectPooling
 
             CancelPendingRelease(instance);
             _active.Remove(instance);
-
-            if (_poolables.TryGetValue(instance, out IPoolable[] poolables))
-            {
-                for (int i = 0; i < poolables.Length; i++)
-                {
-                    poolables[i].OnReturnedToPool();
-                }
-            }
+            CallPoolables(instance, poolable => poolable.OnReturnedToPool());
 
             // The pool is full, so this extra instance is not kept
             if (maxSize > 0 && _inactive.Count >= maxSize)
