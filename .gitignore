@@ -26,3 +26,6 @@ Desktop.ini
 
 # Local tool settings
 /.claude/settings.local.json
+
+# Samples imported through the Package Manager; the originals are in the package's Samples~ folder
+/Assets/Samples/

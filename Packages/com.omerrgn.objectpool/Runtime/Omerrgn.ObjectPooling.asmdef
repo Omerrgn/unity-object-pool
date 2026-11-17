@@ -1,0 +1,14 @@
+{
+    "name": "Omerrgn.ObjectPooling",
+    "rootNamespace": "Omerrgn.ObjectPooling",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

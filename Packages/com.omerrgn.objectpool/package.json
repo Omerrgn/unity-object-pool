@@ -1,0 +1,28 @@
+{
+  "name": "com.omerrgn.objectpool",
+  "version": "1.1.0",
+  "displayName": "Object Pool",
+  "description": "A small GameObject pool that you set up in the Inspector: one ObjectPool component per prefab. Instances are reused instead of being instantiated and destroyed over and over.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "documentationUrl": "https://github.com/Omerrgn/unity-object-pool#readme",
+  "changelogUrl": "https://github.com/Omerrgn/unity-object-pool/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/Omerrgn/unity-object-pool/blob/main/LICENSE",
+  "keywords": [
+    "pool",
+    "pooling",
+    "object pool",
+    "gameobject"
+  ],
+  "author": {
+    "name": "Omerrgn",
+    "url": "https://github.com/Omerrgn"
+  },
+  "samples": [
+    {
+      "displayName": "Cube Launcher",
+      "description": "Fires pooled cubes while Space is held and shows the pool's counters.",
+      "path": "Samples~/CubeLauncher"
+    }
+  ]
+}

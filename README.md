@@ -14,9 +14,15 @@ It is not worth the extra code for objects that are created once (the player, th
 
 ## Installation
 
-Copy the `Assets/ObjectPool/Runtime` folder into the `Assets` folder of your project. It contains three scripts and has no dependencies.
+In Unity, open **Window → Package Manager**, click the **+** button, choose **Install package from git URL** and paste:
 
-`Assets/ObjectPool/Samples` is optional. It holds the sample scene described [below](#the-sample).
+```
+https://github.com/Omerrgn/unity-object-pool.git?path=/Packages/com.omerrgn.objectpool
+```
+
+Unity installs only the pool itself, not the rest of this repository. To stay on a particular version, append its tag to the address, for example `#v1.1.0`.
+
+If you would rather not use the Package Manager, copy the `Packages/com.omerrgn.objectpool/Runtime` folder anywhere into the `Assets` folder of your project. It has no dependencies.
 
 ## Quick start
 
@@ -135,7 +141,9 @@ This repository does not try to replace it. It is an alternative for GameObjects
 
 ## The sample
 
-Open `Assets/ObjectPool/Samples/ObjectPoolSample.unity`, press Play and hold Space. A launcher fires cubes that return to the pool on their own after two seconds.
+The package comes with a sample scene. In the Package Manager, select **Object Pool**, open its **Samples** tab and click **Import** next to **Cube Launcher**. Unity copies the sample into `Assets/Samples/Object Pool/<version>/Cube Launcher`.
+
+Open `ObjectPoolSample.unity` from there, press Play and hold Space. A launcher fires cubes that return to the pool on their own after two seconds.
 
 The text in the corner shows the pool's counters and the number of cubes fired so far. Total settles at about 20 however long you keep firing, while the number of cubes fired keeps growing. Without a pool, each of those cubes would have been one `Instantiate` and one `Destroy`.
 
@@ -143,7 +151,7 @@ Select the `Launcher` object and change **Initial Size** and **Max Size** on its
 
 ## Tested with
 
-Developed and tested with Unity 6000.3.20f1 and the Built-in Render Pipeline. The runtime scripts use nothing that is specific to a render pipeline or to Unity 6, so they should work in older versions as well, but that has not been tested.
+Requires Unity 6 (6000.0) or newer. Developed and tested with Unity 6000.3.20f1 and the Built-in Render Pipeline; the scripts do not depend on a render pipeline.
 
 The sample reads the keyboard through the Input System package when it is active and through the old Input Manager otherwise.
 
@@ -151,7 +159,7 @@ The sample reads the keyboard through the Input System package when it is active
 
 Unity için küçük bir obje havuzu. Her prefab için sahneye bir `ObjectPool` bileşeni eklenir ve Inspector'dan ayarlanır. Mermi, düşman ya da efekt gibi sık yaratılıp yok edilen objeleri her seferinde `Instantiate` ve `Destroy` ile üretmek yerine havuzdan `Get` ile alır, işiniz bitince `Release` ile geri verirsiniz.
 
-Kurulum için `Assets/ObjectPool/Runtime` klasörünü kendi projenizin `Assets` klasörüne kopyalamanız yeterli.
+Kurulum için Unity'de **Window → Package Manager** penceresini açın, **+** düğmesinden **Install package from git URL** seçeneğini seçip yukarıdaki adresi yapıştırın. Örnek sahneyi aynı pencerede paketin **Samples** sekmesinden alabilirsiniz.
 
 **Initial Size** bir sınır değil, başlangıçta hazır edilen obje sayısıdır. Gereğinden büyükse fazla objeler yalnızca bellek harcar. Küçükse havuz eksik objeleri oyun sırasında yaratır, onları da elinde tutar ve kendiliğinden küçülmez. Doğru değeri bulmak için oyunun en yoğun anını oynayıp `CountAll` değerine bakın.
 

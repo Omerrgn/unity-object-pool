@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (unreleased)
+
+- The pool is now a Unity package, `com.omerrgn.objectpool`. Install it from the Package Manager with the git URL in the README instead of copying files.
+- The sample scene is imported from the package's Samples tab in the Package Manager.
+- The scripts compile into their own assembly, `Omerrgn.ObjectPooling`.
+- Requires Unity 6 (6000.0) or newer.
+
 ## 1.0.0
 
 First release.
