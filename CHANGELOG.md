@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 (unreleased)
+## 1.1.0 (2026-11-17)
 
 - The pool is now a Unity package, `com.omerrgn.objectpool`. Install it from the Package Manager with the git URL in the README instead of copying files.
 - The sample scene is imported from the package's Samples tab in the Package Manager.
@@ -13,7 +13,7 @@
 - Delayed releases are timed in the pool's own `Update` instead of a coroutine per release. An instance due back is now in the pool before other scripts' `Update` asks for one in the same frame, so the pool no longer creates an extra instance at that moment. Each delayed release no longer allocates, and the timers wait instead of being lost while the pool's GameObject is inactive.
 - The sample uses the default material of the project's render pipeline instead of the Built-in one, which URP and HDRP cannot draw. Its cubes are blue on a dark ground, and the camera watches their flight from the side.
 
-## 1.0.0
+## 1.0.0 (2026-10-03)
 
 First release.
 

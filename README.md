@@ -86,7 +86,7 @@ Every instance moves between two states. While it waits in the pool it is inacti
 
 So a pool that starts too small grows to the largest number of instances that were ever in use at the same time, and stays that size. It never shrinks on its own.
 
-An example from the sample scene: the launcher fires 10 cubes per second and each cube lives for 2 seconds, so about 20 cubes are in use at once. Because the game moves on in whole frames, there can be one more in the air for a frame or two. With an Initial Size of 10 the pool creates the missing ones during the first two seconds of firing and then stays at that size.
+An example from the sample scene: the launcher fires 10 cubes per second and each cube lives for 2 seconds, so about 20 cubes are in use at once. Because the game moves on in whole frames, there can be one more in the air for a frame or two. With an Initial Size of 10 the pool creates the missing ones during roughly the first two seconds of firing and then stays at that size.
 
 To find a good value, play your game through its busiest moment and read `CountAll` afterwards. That is the number to put into Initial Size.
 
