@@ -149,6 +149,10 @@ The text in the corner shows the pool's counters and the number of cubes fired s
 
 Select the `Launcher` object and change **Initial Size** and **Max Size** on its Object Pool component to see the behaviour described under [How the size works](#how-the-size-works).
 
+## Running the tests
+
+The package has play mode tests for the pool's behaviour: reuse, growing, Max Size, rejected releases, delayed releases, `IPoolable` and `PooledObject`. To run them, open this repository as a Unity project, then **Window → General → Test Runner → PlayMode → Run All**.
+
 ## Tested with
 
 Requires Unity 6 (6000.0) or newer. Developed and tested with Unity 6000.3.20f1 and the Built-in Render Pipeline; the scripts do not depend on a render pipeline.

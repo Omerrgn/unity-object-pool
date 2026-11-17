@@ -96,6 +96,14 @@ namespace Omerrgn.ObjectPooling
             return newInstance;
         }
 
+        // For the tests: sets up a pool from code. Call it before the pool's GameObject is activated
+        internal void Configure(GameObject prefab, int initialSize, int maxSize)
+        {
+            this.prefab = prefab;
+            this.initialSize = initialSize;
+            this.maxSize = maxSize;
+        }
+
         // Called by PooledObject when an instance is destroyed instead of released
         internal void Forget(GameObject instance)
         {

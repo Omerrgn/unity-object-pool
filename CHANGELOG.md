@@ -6,6 +6,7 @@
 - The sample scene is imported from the package's Samples tab in the Package Manager.
 - The scripts compile into their own assembly, `Omerrgn.ObjectPooling`.
 - Requires Unity 6 (6000.0) or newer.
+- Play mode tests cover reuse, growing, Max Size, rejected releases, delayed releases, `IPoolable` and `PooledObject`.
 
 ## 1.0.0
 
