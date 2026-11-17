@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -31,7 +30,8 @@ namespace Omerrgn.ObjectPooling
         // Used as a stack. A List, so that an instance destroyed while waiting can be taken out of the middle
         private readonly List<GameObject> _inactive = new List<GameObject>();
         private readonly HashSet<GameObject> _active = new HashSet<GameObject>();
-        private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
+        private readonly Dictionary<GameObject, float> _releaseTimes = new Dictionary<GameObject, float>();
+        private readonly List<GameObject> _dueReleases = new List<GameObject>();
         private readonly Dictionary<GameObject, IPoolable[]> _poolables = new Dictionary<GameObject, IPoolable[]>();
         private GameObject _poolContainer;
 
@@ -243,34 +243,49 @@ namespace Omerrgn.ObjectPooling
                 return;
             }
 
-            CancelPendingRelease(instance);
-            _pendingReleases[instance] = StartCoroutine(ReleaseAfterDelay(instance, delay));
+            _releaseTimes[instance] = Time.time + delay;
         }
 
-        private IEnumerator ReleaseAfterDelay(GameObject instance, float delay)
+        // The pool runs before other scripts, so an instance due back this frame is in the pool
+        // before their Update asks for one
+        private void Update()
         {
-            yield return new WaitForSeconds(delay);
-
-            _pendingReleases.Remove(instance);
-
-            if (instance != null)
+            if (_releaseTimes.Count == 0)
             {
-                Release(instance);
+                return;
             }
-            else
+
+            float now = Time.time;
+            foreach (KeyValuePair<GameObject, float> pending in _releaseTimes)
             {
-                _active.Remove(instance);
+                if (pending.Value <= now)
+                {
+                    _dueReleases.Add(pending.Key);
+                }
             }
+
+            for (int i = 0; i < _dueReleases.Count; i++)
+            {
+                GameObject instance = _dueReleases[i];
+                _releaseTimes.Remove(instance);
+
+                if (instance != null)
+                {
+                    Release(instance);
+                }
+                else
+                {
+                    _active.Remove(instance);
+                }
+            }
+
+            _dueReleases.Clear();
         }
 
         // A timer left over from an earlier use must not release the instance during its next use
         private void CancelPendingRelease(GameObject instance)
         {
-            if (_pendingReleases.TryGetValue(instance, out Coroutine pending))
-            {
-                StopCoroutine(pending);
-                _pendingReleases.Remove(instance);
-            }
+            _releaseTimes.Remove(instance);
         }
 
         private bool CanRelease(GameObject instance)

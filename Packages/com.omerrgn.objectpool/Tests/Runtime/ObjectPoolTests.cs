@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -9,8 +10,10 @@ namespace Omerrgn.ObjectPooling.Tests
 {
     public class ObjectPoolTests
     {
+        private readonly List<GameObject> _createdByTest = new List<GameObject>();
         private GameObject _template;
         private ObjectPool _pool;
+        private Scene _otherScene;
 
         [SetUp]
         public void SetUp()
@@ -19,6 +22,7 @@ namespace Omerrgn.ObjectPooling.Tests
             _template.AddComponent<CallCounter>();
         }
 
+        // Runs even when an assertion fails, so nothing a test created can disturb the next one
         [TearDown]
         public void TearDown()
         {
@@ -28,7 +32,28 @@ namespace Omerrgn.ObjectPooling.Tests
                 _pool = null;
             }
 
+            foreach (GameObject created in _createdByTest)
+            {
+                if (created != null)
+                {
+                    Object.Destroy(created);
+                }
+            }
+
+            _createdByTest.Clear();
             Object.Destroy(_template);
+
+            if (_otherScene.IsValid() && _otherScene.isLoaded)
+            {
+                SceneManager.UnloadSceneAsync(_otherScene);
+            }
+        }
+
+        private GameObject CreateObject(string name)
+        {
+            var created = new GameObject(name);
+            _createdByTest.Add(created);
+            return created;
         }
 
         private ObjectPool CreatePool(int initialSize, int maxSize = 0)
@@ -112,14 +137,13 @@ namespace Omerrgn.ObjectPooling.Tests
         public void Release_ObjectFromOutsideThePool_IsRejected()
         {
             ObjectPool pool = CreatePool(1);
-            var stranger = new GameObject("Stranger");
+            GameObject stranger = CreateObject("Stranger");
 
             LogAssert.Expect(LogType.Warning, new Regex("does not belong to this pool"));
             pool.Release(stranger);
 
             Assert.IsTrue(stranger.activeSelf);
             Assert.AreEqual(1, pool.CountAll);
-            Object.Destroy(stranger);
         }
 
         [UnityTest]
@@ -164,6 +188,38 @@ namespace Omerrgn.ObjectPooling.Tests
 
             Assert.AreSame(instance, reused);
             Assert.IsTrue(reused.activeSelf, "The timer from the first use released the instance during its second use");
+        }
+
+        [UnityTest]
+        public IEnumerator ReleaseWithDelay_InstanceDueThisFrameIsBackBeforeOtherScriptsGet()
+        {
+            ObjectPool pool = CreatePool(1);
+            GameObject instance = pool.Get();
+            pool.Release(instance, 0.1f);
+
+            var getter = CreateObject("Getter").AddComponent<GetWhenDue>();
+            getter.Pool = pool;
+            getter.DueTime = Time.time + 0.1f;
+            yield return new WaitUntil(() => getter.Received != null);
+
+            Assert.AreSame(instance, getter.Received, "The pool created a new instance instead of reusing the one due back");
+            Assert.AreEqual(1, pool.CountAll);
+        }
+
+        [UnityTest]
+        public IEnumerator ReleaseWithDelay_WaitsWhilePoolIsInactive()
+        {
+            ObjectPool pool = CreatePool(1);
+            GameObject instance = pool.Get();
+            pool.Release(instance, 0.1f);
+
+            pool.gameObject.SetActive(false);
+            yield return new WaitForSeconds(0.2f);
+            Assert.IsTrue(instance.activeSelf, "The instance went back while the pool was inactive");
+
+            pool.gameObject.SetActive(true);
+            yield return null;
+            Assert.IsFalse(instance.activeSelf, "The overdue instance did not go back once the pool was active again");
         }
 
         [Test]
@@ -254,18 +310,18 @@ namespace Omerrgn.ObjectPooling.Tests
         [UnityTest]
         public IEnumerator PoolInAnotherScene_KeepsInstancesInThatScene()
         {
-            Scene otherScene = SceneManager.CreateScene("Pool Test Scene");
+            _otherScene = SceneManager.CreateScene("Pool Test Scene");
             var poolObject = new GameObject("Pool");
             poolObject.SetActive(false);
-            SceneManager.MoveGameObjectToScene(poolObject, otherScene);
+            SceneManager.MoveGameObjectToScene(poolObject, _otherScene);
 
             _pool = poolObject.AddComponent<ObjectPool>();
             _pool.Configure(_template, 1, 0);
             poolObject.SetActive(true);
             GameObject instance = _pool.Get();
 
-            Assert.AreEqual(otherScene, instance.scene);
-            yield return SceneManager.UnloadSceneAsync(otherScene);
+            Assert.AreEqual(_otherScene, instance.scene);
+            yield return SceneManager.UnloadSceneAsync(_otherScene);
         }
     }
 }

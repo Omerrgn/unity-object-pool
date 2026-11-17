@@ -10,6 +10,7 @@
 - The instances now stay in the pool's scene. A pool marked `DontDestroyOnLoad` used to lose them on the next scene load, and a pool in an additively loaded scene put them into the active scene.
 - An exception thrown by an `IPoolable` method is logged and no longer leaves the instance stuck between the pool and the game.
 - `CountInactive` no longer counts an instance that was destroyed while it waited in the pool.
+- Delayed releases are timed in the pool's own `Update` instead of a coroutine per release. An instance due back is now in the pool before other scripts' `Update` asks for one in the same frame, so the pool no longer creates an extra instance at that moment. Each delayed release no longer allocates, and the timers wait instead of being lost while the pool's GameObject is inactive.
 - The sample uses the default material of the project's render pipeline instead of the Built-in one, which URP and HDRP cannot draw. Its cubes are blue on a dark ground, and the camera watches their flight from the side.
 
 ## 1.0.0

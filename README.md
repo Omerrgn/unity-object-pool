@@ -86,7 +86,7 @@ Every instance moves between two states. While it waits in the pool it is inacti
 
 So a pool that starts too small grows to the largest number of instances that were ever in use at the same time, and stays that size. It never shrinks on its own.
 
-An example from the sample scene: the launcher fires 10 cubes per second and each cube lives for 2 seconds, so about 20 cubes are in use at once. With an Initial Size of 10 the pool creates the other 10 during the first two seconds of firing and none after that.
+An example from the sample scene: the launcher fires 10 cubes per second and each cube lives for 2 seconds, so about 20 cubes are in use at once. Because the game moves on in whole frames, there can be one more in the air for a frame or two. With an Initial Size of 10 the pool creates the missing ones during the first two seconds of firing and then stays at that size.
 
 To find a good value, play your game through its busiest moment and read `CountAll` afterwards. That is the number to put into Initial Size.
 
@@ -155,7 +155,7 @@ You do not have to add `PooledObject` to the prefab. The pool adds it after the 
 - Releasing an object twice, or releasing an object that belongs to another pool, logs a warning and does nothing.
 - If an `IPoolable` method throws, the exception is logged and the instance is still handed out or put back; the other components on it are still called.
 - A delayed release is cancelled when the instance is released earlier or scheduled again. A bullet with a three second lifetime that hits something after one second will not be pulled back two seconds into its next flight.
-- The timer of a delayed release runs on the pool. If the pool's GameObject is deactivated, pending delayed releases are lost and those instances stay in use.
+- The pool times delayed releases itself, in its own `Update`, which runs before other scripts. An instance that is due back is therefore in the pool before another script asks for one in the same frame. While the pool's GameObject is inactive the timers wait; overdue instances go back as soon as it is active again.
 - The instances live under an object named `Pool - <prefab name>` in the same scene as the pool, and are destroyed together with the pool. A pool marked `DontDestroyOnLoad` keeps its instances across scene loads; call `DontDestroyOnLoad` in `Awake` so that the pool can follow along.
 - The pool initialises before other scripts, so calling `Get` from another script's `Awake` works.
 - `IPoolable` components are looked up once, when an instance is created. Components added to an instance later are not called.
