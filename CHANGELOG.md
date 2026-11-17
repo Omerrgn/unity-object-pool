@@ -9,6 +9,7 @@
 - Play mode tests cover reuse, growing, Max Size, rejected releases, delayed releases, `IPoolable` and `PooledObject`.
 - The instances now stay in the pool's scene. A pool marked `DontDestroyOnLoad` used to lose them on the next scene load, and a pool in an additively loaded scene put them into the active scene.
 - An exception thrown by an `IPoolable` method is logged and no longer leaves the instance stuck between the pool and the game.
+- `CountInactive` no longer counts an instance that was destroyed while it waited in the pool.
 
 ## 1.0.0
 

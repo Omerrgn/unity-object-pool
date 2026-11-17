@@ -37,7 +37,8 @@ namespace Omerrgn.ObjectPooling
 
         private void OnDestroy()
         {
-            if (Pool != null)
+            // When the whole scene unloads, the pool goes with it and needs no notice
+            if (Pool != null && gameObject.scene.isLoaded)
             {
                 Pool.Forget(gameObject);
             }

@@ -226,6 +226,20 @@ namespace Omerrgn.ObjectPooling.Tests
         }
 
         [UnityTest]
+        public IEnumerator DestroyedWaitingInstance_IsNoLongerCountedAsInactive()
+        {
+            ObjectPool pool = CreatePool(2);
+            GameObject instance = pool.Get();
+            pool.Release(instance);
+
+            Object.Destroy(instance);
+            yield return null;
+
+            Assert.AreEqual(1, pool.CountInactive);
+            Assert.IsFalse(pool.Get() == null, "The pool handed out the destroyed instance");
+        }
+
+        [UnityTest]
         public IEnumerator PoolMarkedDontDestroyOnLoad_KeepsInstancesInItsScene()
         {
             ObjectPool pool = CreatePool(1);

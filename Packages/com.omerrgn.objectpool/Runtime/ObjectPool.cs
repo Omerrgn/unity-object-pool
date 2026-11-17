@@ -28,7 +28,8 @@ namespace Omerrgn.ObjectPooling
         [Min(0)]
         [SerializeField] private int maxSize = 0;
 
-        private readonly Stack<GameObject> _inactive = new Stack<GameObject>();
+        // Used as a stack. A List, so that an instance destroyed while waiting can be taken out of the middle
+        private readonly List<GameObject> _inactive = new List<GameObject>();
         private readonly HashSet<GameObject> _active = new HashSet<GameObject>();
         private readonly Dictionary<GameObject, Coroutine> _pendingReleases = new Dictionary<GameObject, Coroutine>();
         private readonly Dictionary<GameObject, IPoolable[]> _poolables = new Dictionary<GameObject, IPoolable[]>();
@@ -97,7 +98,7 @@ namespace Omerrgn.ObjectPooling
         {
             for (int i = 0; i < initialSize; i++)
             {
-                _inactive.Push(CreateInstance());
+                _inactive.Add(CreateInstance());
             }
         }
 
@@ -135,6 +136,7 @@ namespace Omerrgn.ObjectPooling
         {
             CancelPendingRelease(instance);
             _active.Remove(instance);
+            _inactive.Remove(instance);
             _poolables.Remove(instance);
         }
 
@@ -162,7 +164,9 @@ namespace Omerrgn.ObjectPooling
             // Instances destroyed while they waited in the pool are skipped
             while (instance == null && _inactive.Count > 0)
             {
-                instance = _inactive.Pop();
+                int last = _inactive.Count - 1;
+                instance = _inactive[last];
+                _inactive.RemoveAt(last);
             }
 
             if (instance == null)
@@ -228,7 +232,7 @@ namespace Omerrgn.ObjectPooling
                 instance.transform.SetParent(_poolContainer.transform, false);
             }
 
-            _inactive.Push(instance);
+            _inactive.Add(instance);
         }
 
         /// <summary>Puts an instance back after a delay in seconds.</summary>
