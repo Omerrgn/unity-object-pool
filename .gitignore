@@ -29,3 +29,4 @@ Desktop.ini
 
 # Samples imported through the Package Manager; the originals are in the package's Samples~ folder
 /Assets/Samples/
+/Assets/Samples.meta
