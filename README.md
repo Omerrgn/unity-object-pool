@@ -34,7 +34,7 @@ https://github.com/Omerrgn/unity-object-pool.git?path=/Packages/com.omerrgn.obje
 
 Unity installs only the pool itself, not the rest of this repository. To stay on a particular version, append its tag to the address, for example `#v1.1.0`.
 
-If you would rather not use the Package Manager, copy the `Packages/com.omerrgn.objectpool/Runtime` folder anywhere into the `Assets` folder of your project. It has no dependencies.
+If you prefer the classic import window, download `ObjectPool-<version>.unitypackage` from the [Releases](https://github.com/Omerrgn/unity-object-pool/releases) page and double-click it, or use **Assets → Import Package → Custom Package**. It puts the pool and the sample under `Assets/ObjectPool`. Use either this or the Package Manager, not both, or the same scripts end up in the project twice.
 
 ## Quick start
 
@@ -190,7 +190,7 @@ The sample reads the keyboard through the Input System package when it is active
 
 Unity için küçük bir obje havuzu. Her prefab için sahneye bir `ObjectPool` bileşeni eklenir ve Inspector'dan ayarlanır. Mermi, düşman ya da efekt gibi sık yaratılıp yok edilen objeleri her seferinde `Instantiate` ve `Destroy` ile üretmek yerine havuzdan `Get` ile alır, işiniz bitince `Release` ile geri verirsiniz.
 
-Kurulum için Unity'de **Window → Package Manager** penceresini açın, **+** düğmesinden **Install package from git URL** seçeneğini seçip yukarıdaki adresi yapıştırın. Örnek sahneyi aynı pencerede paketin **Samples** sekmesinden alabilirsiniz.
+Kurulum için Unity'de **Window → Package Manager** penceresini açın, **+** düğmesinden **Install package from git URL** seçeneğini seçip yukarıdaki adresi yapıştırın. Örnek sahneyi aynı pencerede paketin **Samples** sekmesinden alabilirsiniz. Klasik içe aktarma penceresini tercih ederseniz Releases sayfasından `.unitypackage` dosyasını indirip çift tıklayın; ikisinden yalnızca birini kullanın.
 
 **Initial Size** bir sınır değil, başlangıçta hazır edilen obje sayısıdır. Gereğinden büyükse fazla objeler yalnızca bellek harcar. Küçükse havuz eksik objeleri oyun sırasında yaratır, onları da elinde tutar ve kendiliğinden küçülmez. Doğru değeri bulmak için oyunun en yoğun anını oynayıp `CountAll` değerine bakın.
 
